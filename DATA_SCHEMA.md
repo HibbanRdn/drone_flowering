@@ -23,6 +23,28 @@ Field metadata run:
 | `app_version` | Tidak | Versi aplikasi bila tersedia. |
 | `notes` | Tidak | Catatan eksperimen. |
 
+## Experiment Metadata
+
+Field `experiment` bersifat opsional di config dan disalin ke `run_manifest.json`.
+
+| Field | Wajib | Deskripsi |
+| --- | --- | --- |
+| `mission_id` | Tidak | ID eksperimen atau misi. |
+| `block_id` | Tidak | ID blok/lokasi kebun. |
+| `crop_type` | Tidak | Jenis tanaman, misalnya `pineapple`. |
+| `target_case` | Tidak | Target deteksi, misalnya `flowering_candidate`. |
+| `flight_pattern` | Tidak | Pola terbang, misalnya `row_following`. |
+| `camera_mode` | Tidak | Mode kamera, misalnya `video`. |
+| `altitude_m` | Tidak | Altitude rencana/eksperimen dalam meter. |
+| `gimbal_pitch_deg` | Tidak | Pitch gimbal rencana/eksperimen. |
+| `heading_strategy` | Tidak | Strategi heading, misalnya `along_row`. |
+| `speed_mps` | Tidak | Speed rencana/eksperimen dalam meter per detik. |
+| `time_of_day` | Tidak | Waktu pengambilan data. |
+| `lighting` | Tidak | Kondisi pencahayaan. |
+| `notes` | Tidak | Catatan bebas. |
+
+Catatan: metadata eksperimen ini masih offline/manual dan bukan telemetry DJI asli.
+
 ## Input Video Metadata
 
 | Field | Wajib | Deskripsi |
@@ -151,7 +173,72 @@ Aturan CSV:
 - Field opsional boleh kosong, tetapi kolom wajib tetap harus ada.
 - Gunakan encoding UTF-8 dan pemisah koma.
 
-Jika satu frame tidak memiliki detection, tidak perlu menulis row detection kosong. Informasi run tetap disimpan pada `run_metadata.json`.
+Jika satu frame tidak memiliki detection, tidak perlu menulis row detection kosong. Informasi run tetap disimpan pada `run_metadata.json` dan `run_manifest.json`.
+
+## Run Manifest Schema
+
+`run_manifest.json` berisi audit lengkap satu run:
+
+```json
+{
+  "schema_version": "drone-flowering-detection.v1",
+  "run_id": "20260703-140000",
+  "created_at": "2026-07-03T14:00:00+07:00",
+  "source_video": "data/raw/sample.mp4",
+  "config_path": "configs/offline.json",
+  "config_snapshot": {},
+  "experiment": {},
+  "outputs": {
+    "detections_jsonl": "data/outputs/runs/20260703-140000/detections.jsonl",
+    "detections_csv": "data/outputs/runs/20260703-140000/detections.csv",
+    "overlay_video": "data/outputs/runs/20260703-140000/overlay.mp4",
+    "overlay_frames_dir": "data/outputs/runs/20260703-140000/frames"
+  },
+  "summary": {
+    "frames_processed": 3,
+    "detections_written": 3,
+    "overlay_enabled": true,
+    "overlay_frames_written": 2,
+    "started_at": "2026-07-03T14:00:00+07:00",
+    "finished_at": "2026-07-03T14:00:01+07:00",
+    "duration_seconds": 1.0
+  },
+  "warnings": []
+}
+```
+
+`overlay_video` dan `overlay_frames_dir` hanya ada bila output tersebut dibuat.
+
+## Run Summary Schema
+
+`run_summary.json` berisi ringkasan pendek untuk perbandingan eksperimen:
+
+```json
+{
+  "run_id": "20260703-140000",
+  "mission_id": "FLOWERING_TEST_001",
+  "block_id": "PG1_005E_F0",
+  "target_case": "flowering_candidate",
+  "source_video": "data/raw/sample.mp4",
+  "frames_processed": 3,
+  "detections_written": 3,
+  "labels_count": {
+    "flowering_candidate": 3
+  },
+  "confidence_min": 0.72,
+  "confidence_max": 0.72,
+  "confidence_avg": 0.72,
+  "timestamp_ms_min": 0.0,
+  "timestamp_ms_max": 2000.0,
+  "telemetry": {
+    "altitude_m": 35.0,
+    "gimbal_pitch_deg": -60.0,
+    "speed_mps": 4.2
+  },
+  "overlay_enabled": true,
+  "output_files": {}
+}
+```
 
 ## Field Wajib
 

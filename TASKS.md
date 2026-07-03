@@ -50,7 +50,7 @@
   - Acceptance criteria: output tersimpan di `data/outputs/runs/<run_id>/` tanpa menimpa run lain.
   - Catatan batasan: jangan menghapus output lama secara otomatis.
 
-- [ ] Fase 8: Overlay image / video
+- [x] Fase 8: Overlay image / video
   - Tujuan: membuat `OpenCvOverlayRenderer` opsional untuk validasi visual.
   - File kemungkinan dibuat/diubah: `src/drone_flowering/overlay.py`.
   - Acceptance criteria: overlay dapat dibuat bila opsi aktif; pipeline data tetap berjalan bila overlay nonaktif.
@@ -74,8 +74,33 @@
   - Acceptance criteria: user dapat setup, menjalankan, membaca output, dan debug error umum.
   - Catatan batasan: jangan mendokumentasikan fitur yang belum ada sebagai fitur final.
 
-- [ ] Fase 12: Persiapan adapter PSDK di level desain saja
+- [x] Fase 12: Run manifest, experiment metadata, dan summary report
+  - Tujuan: mencatat metadata eksperimen dan ringkasan run untuk audit sudut kamera.
+  - File kemungkinan dibuat/diubah: `configs/offline.json`, `src/drone_flowering/app.py`, `src/drone_flowering/config.py`, `src/drone_flowering/writer.py`.
+  - Acceptance criteria: setiap run menghasilkan `run_manifest.json` dan `run_summary.json`.
+  - Catatan batasan: metadata masih offline/manual, bukan telemetry DJI asli.
+
+- [ ] Fase 13: Request dataset asli dari pembimbing/tim
+  - Tujuan: mendapatkan contoh data lapangan GGP/GGF sebelum menentukan format input, preprocessing, anotasi, dan arah model.
+  - File kemungkinan dibuat/diubah: `EXPERIMENTS.md`, `RUNBOOK.md`, catatan lokal non-repository bila data bersifat internal.
+  - Acceptance criteria: tersedia 1-3 file contoh dan informasi metadata minimal untuk evaluasi awal.
+  - Catatan batasan: jangan memakai dataset publik, auto-download, Roboflow/Kaggle/Mendeley, cloud/S3, API key, training, atau model AI asli.
+
+- [ ] Fase 14: Evaluasi format data asli
+  - Tujuan: menentukan apakah pipeline perlu mendukung video, image folder, `.tif`/GeoTIFF, atau format lain.
+  - File kemungkinan dibuat/diubah: `DESIGN.md`, `RUNBOOK.md`, mungkin task implementasi baru setelah data diterima.
+  - Acceptance criteria: keputusan input utama dan kebutuhan preprocessing/anotasi terdokumentasi.
+  - Catatan batasan: jangan membuat fitur parser/preprocessing sebelum contoh data diterima.
+
+- [ ] Fase 15: Persiapan adapter PSDK di level desain saja
   - Tujuan: mendokumentasikan rencana adapter PSDK tanpa implementasi DJI.
   - File kemungkinan dibuat/diubah: `DESIGN.md`, mungkin `docs/psdk_migration_notes.md`.
   - Acceptance criteria: boundary `PSDKLiveviewFrameSource` dan `PSDKTelemetryProvider` jelas di level desain.
   - Catatan batasan: jangan menambahkan dependency PSDK atau kode integrasi PSDK asli.
+
+## Catatan Task Selesai
+
+- [x] 2026-07-03: Menambahkan dokumentasi status development dan panduan demo/manual check.
+  - File dibuat/diubah: `DEV_STATUS.md`, `README.md`, `TASKS.md`.
+  - Acceptance criteria: status fitur selesai, batasan scope, command manual check, panduan demo, checklist pembimbing, pertanyaan lanjutan, dan paragraf status singkat terdokumentasi.
+  - Catatan batasan: tidak menambahkan fitur baru, dependency, schema output, integrasi DJI/PSDK/Manifold, cloud, atau model AI asli.

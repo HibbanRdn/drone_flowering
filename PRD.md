@@ -41,6 +41,7 @@ Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil 
 
 ## Non-Goals / Out of Scope
 
+- Dataset publik, auto-download dataset, dan integrasi Roboflow/Kaggle/Mendeley.
 - Integrasi DJI PSDK asli.
 - PSDK Liveview runtime.
 - Data Subscription asli.
@@ -59,6 +60,7 @@ Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil 
 - File config lokal.
 - Parameter sampling frame.
 - Mock telemetry atau telemetry log lokal pada fase berikutnya.
+- Dataset asli dari pembimbing/tim GGP/GGF belum tersedia dan akan diminta sebelum menentukan format input utama berikutnya.
 
 ## Output
 
@@ -93,6 +95,7 @@ Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil 
 - Telemetry awal dapat dimock dengan nilai stabil atau interpolasi sederhana.
 - Fokus awal adalah pipeline dan auditability, bukan performa real-time.
 - Integrasi DJI baru dilakukan setelah desain offline stabil.
+- Dataset publik tidak digunakan saat ini; data lapangan asli dari pembimbing/tim menjadi prioritas sebelum preprocessing, anotasi, training, atau model asli.
 
 ## Rencana Pengembangan Menuju Custom PSDK / Manifold 3
 

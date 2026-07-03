@@ -5,6 +5,21 @@
   "output": {
     "root_dir": "data/outputs/runs"
   },
+  "experiment": {
+    "mission_id": "FLOWERING_TEST_001",
+    "block_id": "PG1_005E_F0",
+    "crop_type": "pineapple",
+    "target_case": "flowering_candidate",
+    "flight_pattern": "row_following",
+    "camera_mode": "video",
+    "altitude_m": 20.0,
+    "gimbal_pitch_deg": -45.0,
+    "heading_strategy": "along_row",
+    "speed_mps": 2.0,
+    "time_of_day": "morning",
+    "lighting": "unknown",
+    "notes": "offline prototype run"
+  },
   "sampling": {
     "every_n_frames": 10
   },
@@ -22,5 +37,11 @@
     "lat_step_per_s": 0.0,
     "lng_step_per_s": 0.0,
     "heading_step_deg_per_s": 0.0
+  },
+  "overlay": {
+    "enabled": false,
+    "output_video": true,
+    "output_frames": false,
+    "max_frames": 100
   }
 }

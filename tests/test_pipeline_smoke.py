@@ -3,11 +3,13 @@ from __future__ import annotations
 import json
 import shutil
 import sys
+import csv
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from drone_flowering.app import run_pipeline
+from drone_flowering.schema import SCHEMA_VERSION
 
 
 def main() -> None:
@@ -37,6 +39,14 @@ def main() -> None:
                 {
                     "input": {"video_path": str(video_path)},
                     "output": {"root_dir": str(workdir / "outputs" / "runs")},
+                    "experiment": {
+                        "mission_id": "FLOWERING_TEST_001",
+                        "block_id": "PG1_005E_F0",
+                        "target_case": "flowering_candidate",
+                        "altitude_m": 20.0,
+                        "gimbal_pitch_deg": -45.0,
+                        "speed_mps": 2.0,
+                    },
                     "sampling": {"every_n_frames": 5},
                     "dummy_inference": {
                         "label": "flowering_candidate",
@@ -56,15 +66,28 @@ def main() -> None:
         )
 
         result = run_pipeline(config_path)
+        assert result.run_dir.exists()
         assert result.frames_processed == 3
         assert result.detections_written == 3
 
         jsonl_path = result.run_dir / "detections.jsonl"
         csv_path = result.run_dir / "detections.csv"
+        metadata_path = result.run_dir / "run_metadata.json"
+        manifest_path = result.run_dir / "run_manifest.json"
+        summary_path = result.run_dir / "run_summary.json"
         assert jsonl_path.exists()
         assert csv_path.exists()
+        assert metadata_path.exists()
+        assert manifest_path.exists()
+        assert summary_path.exists()
 
-        record = json.loads(jsonl_path.read_text(encoding="utf-8").splitlines()[0])
+        records = [
+            json.loads(line)
+            for line in jsonl_path.read_text(encoding="utf-8").splitlines()
+        ]
+        assert records
+        assert {record["run_id"] for record in records} == {result.run_id}
+        record = records[0]
         required = {
             "schema_version",
             "run_id",
@@ -79,16 +102,93 @@ def main() -> None:
             "bbox_format",
             "telemetry",
         }
-        assert required <= record.keys()
-        for key in (
+        telemetry_required = (
             "lat",
             "lng",
             "altitude_m",
             "heading_deg",
             "gimbal_pitch_deg",
             "speed_mps",
+        )
+        for record in records:
+            assert required <= record.keys()
+            assert record["schema_version"] == SCHEMA_VERSION
+            assert record["run_id"] == result.run_id
+            assert record["bbox_format"] == "xyxy"
+            for key in telemetry_required:
+                assert key in record["telemetry"]
+
+        with csv_path.open(newline="", encoding="utf-8") as csv_file:
+            rows = list(csv.DictReader(csv_file))
+        assert rows
+        assert {row["run_id"] for row in rows} == {result.run_id}
+        for column in (
+            "telemetry_lat",
+            "telemetry_lng",
+            "telemetry_altitude_m",
+            "telemetry_heading_deg",
+            "telemetry_gimbal_pitch_deg",
+            "telemetry_speed_mps",
         ):
-            assert key in record["telemetry"]
+            assert column in rows[0]
+
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        assert manifest["experiment"]["mission_id"] == "FLOWERING_TEST_001"
+        assert manifest["summary"]["frames_processed"] == 3
+        assert manifest["summary"]["detections_written"] == 3
+        assert manifest["summary"]["overlay_enabled"] is False
+        assert summary["mission_id"] == "FLOWERING_TEST_001"
+        assert summary["block_id"] == "PG1_005E_F0"
+        assert summary["target_case"] == "flowering_candidate"
+        assert summary["frames_processed"] == 3
+        assert summary["detections_written"] == 3
+        assert summary["labels_count"] == {"flowering_candidate": 3}
+        assert summary["confidence_min"] == 0.72
+        assert summary["confidence_max"] == 0.72
+        assert summary["confidence_avg"] == 0.72
+        assert summary["overlay_enabled"] is False
+
+        no_experiment_config_path = workdir / "offline_no_experiment.json"
+        no_experiment_config = json.loads(config_path.read_text(encoding="utf-8"))
+        no_experiment_config.pop("experiment")
+        no_experiment_config_path.write_text(
+            json.dumps(no_experiment_config), encoding="utf-8"
+        )
+
+        second_result = run_pipeline(no_experiment_config_path)
+        assert second_result.run_dir.exists()
+        assert second_result.run_dir != result.run_dir
+        assert not (second_result.run_dir / "overlay.mp4").exists()
+        assert not (second_result.run_dir / "frames").exists()
+        second_manifest = json.loads(
+            (second_result.run_dir / "run_manifest.json").read_text(encoding="utf-8")
+        )
+        assert second_manifest["experiment"] == {}
+
+        overlay_config_path = workdir / "offline_overlay.json"
+        overlay_config = json.loads(config_path.read_text(encoding="utf-8"))
+        overlay_config["overlay"] = {
+            "enabled": True,
+            "output_video": False,
+            "output_frames": True,
+            "max_frames": 2,
+        }
+        overlay_config_path.write_text(json.dumps(overlay_config), encoding="utf-8")
+
+        overlay_result = run_pipeline(overlay_config_path)
+        frame_files = sorted((overlay_result.run_dir / "frames").glob("*.jpg"))
+        assert len(frame_files) == 2
+        assert all(path.stat().st_size > 0 for path in frame_files)
+        assert (overlay_result.run_dir / "detections.jsonl").exists()
+        assert (overlay_result.run_dir / "detections.csv").exists()
+        overlay_manifest = json.loads(
+            (overlay_result.run_dir / "run_manifest.json").read_text(encoding="utf-8")
+        )
+        assert overlay_manifest["summary"]["overlay_enabled"] is True
+        assert overlay_manifest["summary"]["overlay_frames_written"] == 2
+        assert overlay_manifest["outputs"]["overlay_frames_dir"].endswith("frames")
+        assert "overlay_video" not in overlay_manifest["outputs"]
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 

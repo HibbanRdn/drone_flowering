@@ -20,7 +20,7 @@ Case awal adalah deteksi flowering candidate atau kondisi tanaman pada kebun nan
 - Menjalankan dummy inference engine deterministik.
 - Menggabungkan hasil inference dengan mock telemetry provider.
 - Menulis hasil ke result writer berbasis `JSONL` dan `CSV`.
-- Overlay renderer belum dibuat pada MVP awal.
+- Membuat overlay renderer lokal opsional untuk audit visual.
 
 ## Gambaran Pipeline
 
@@ -31,7 +31,7 @@ video file
 -> inference engine
 -> telemetry provider
 -> result writer
--> overlay renderer opsional pada fase berikutnya
+-> overlay renderer opsional
 ```
 
 ## Batasan Yang Belum Dikerjakan
@@ -44,6 +44,15 @@ video file
 - Belum ada training model serius.
 - Belum ada cloud, S3, database production, credential, token, atau secrets.
 - Belum ada fitur production.
+- Belum ada dataset asli lapangan dari pembimbing/tim GGP/GGF.
+- Tidak menambahkan dataset publik, auto-download dataset, atau integrasi Roboflow/Kaggle/Mendeley pada tahap ini.
+- Belum ada model AI asli, preprocessing dataset, atau workflow anotasi.
+
+## Status Dataset
+
+Tahap berikutnya adalah meminta dan menunggu dataset asli dari pembimbing atau tim GGP/GGF. Data yang mungkin diterima dapat berupa video drone, frame/foto drone, `.tif`/orthomosaic, live stream sample, atau data lain terkait flowering/kondisi tanaman nanas.
+
+Keputusan format input utama, kebutuhan preprocessing, strategi anotasi, dukungan image folder/GeoTIFF, dan pilihan pendekatan model seperti object detection, segmentation, atau pendekatan lain baru ditentukan setelah contoh data asli diterima.
 
 ## Rencana Cara Menjalankan App
 
@@ -66,11 +75,19 @@ Output setiap run berada pada folder terpisah, misalnya:
 ```text
 data/outputs/runs/<run_id>/
   run_metadata.json
+  run_manifest.json
+  run_summary.json
   detections.jsonl
   detections.csv
+  overlay.mp4        # jika overlay.output_video aktif
+  frames/            # jika overlay.output_frames aktif
 ```
 
 Detail operasional akan dijaga di `RUNBOOK.md`.
+
+Status development saat ini dan panduan demo/manual check tersedia di `DEV_STATUS.md`.
+
+`run_manifest.json` menyimpan snapshot config, metadata eksperimen, daftar output, warning, dan ringkasan teknis run. `run_summary.json` menyimpan ringkasan kecil untuk membandingkan eksperimen sudut kamera, misalnya mission, block, jumlah detection, confidence, telemetry mock, dan status overlay.
 
 ## Posisi Terhadap DJI PSDK dan Manifold
 

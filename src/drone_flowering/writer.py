@@ -22,6 +22,12 @@ class JsonlCsvResultWriter:
             encoding="utf-8",
         )
 
+    def write_json(self, filename: str, data: dict[str, object]) -> None:
+        (self.run_dir / filename).write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
     def write_detection(self, record: dict[str, object]) -> None:
         self._jsonl.write(json.dumps(record, ensure_ascii=False) + "\n")
         self._csv.writerow(flatten_detection(record))

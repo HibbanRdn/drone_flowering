@@ -22,11 +22,11 @@ ConfigLoader
 5. TelemetryProvider menyediakan telemetry untuk timestamp frame.
 6. ResultWriter menulis detection ke `JSONL` dan `CSV`.
 7. OverlayRenderer membuat output visual bila diaktifkan.
-8. Metadata run disimpan untuk audit.
+8. Manifest dan summary run disimpan untuk audit eksperimen.
 
 ## Struktur Modul
 
-Struktur implementasi awal yang disarankan:
+Struktur implementasi awal:
 
 ```text
 src/drone_flowering/
@@ -40,7 +40,7 @@ src/drone_flowering/
   schema.py
 ```
 
-Struktur ini belum perlu dibuat sampai dokumen planning disetujui.
+Struktur ini menjadi batas modul MVP offline saat ini.
 
 ## Interface / Abstraction Layer
 
@@ -75,6 +75,22 @@ Bertanggung jawab membaca config lokal dan melakukan validasi minimal terhadap f
 - `MockTelemetryProvider`: menghasilkan telemetry lokal berdasarkan timestamp.
 - `JsonlCsvResultWriter`: menulis `detections.jsonl`, `detections.csv`, dan metadata run.
 - `OpenCvOverlayRenderer`: membuat overlay image atau video untuk validasi visual.
+- `run_manifest.json`: menyimpan snapshot config, metadata eksperimen, output, warning, dan summary teknis.
+- `run_summary.json`: menyimpan ringkasan kecil untuk membandingkan eksperimen.
+
+## Status Data Input
+
+Input utama saat ini tetap video file lokal. Dataset publik tidak ditambahkan pada tahap ini. Contoh data asli akan diminta dari pembimbing atau tim GGP/GGF terlebih dahulu.
+
+Setelah contoh data diterima, keputusan teknis berikut baru dievaluasi:
+
+- apakah input utama tetap video, image folder, `.tif`/orthomosaic, atau format lain;
+- kebutuhan preprocessing;
+- strategi anotasi;
+- kebutuhan image folder atau GeoTIFF support;
+- apakah model berikutnya object detection, segmentation, atau pendekatan lain.
+
+Sebelum keputusan tersebut dibuat, jangan menambahkan parser dataset publik, auto-download dataset, workflow training, atau integrasi cloud.
 
 ## Rencana Migrasi
 
@@ -116,11 +132,17 @@ Setiap run membuat folder output sendiri:
 ```text
 data/outputs/runs/<run_id>/
   run_metadata.json
+  run_manifest.json
+  run_summary.json
   detections.jsonl
   detections.csv
+  overlay.mp4
+  frames/
 ```
 
-`run_id` dapat berbasis timestamp lokal atau UUID pendek. Output lama tidak ditimpa kecuali user menghapusnya secara eksplisit.
+`overlay.mp4` dan `frames/` bersifat opsional sesuai config overlay. `run_id` dapat berbasis timestamp lokal atau UUID pendek. Output lama tidak ditimpa kecuali user menghapusnya secara eksplisit.
+
+Metadata `experiment` berasal dari config lokal dan masih manual/offline. Metadata ini bukan telemetry DJI asli, tetapi dipakai untuk membandingkan variasi sudut kamera, altitude, speed, heading strategy, lighting, dan flight pattern.
 
 ## Batasan Teknis Yang Harus Dijaga
 
