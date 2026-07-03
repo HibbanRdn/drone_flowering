@@ -1,0 +1,19 @@
+[project]
+name = "drone-flowering"
+version = "0.1.0"
+description = "Offline prototype pipeline Computer Vision drone untuk deteksi flowering candidate."
+requires-python = ">=3.11"
+dependencies = [
+  "opencv-python-headless>=4.8",
+  "numpy>=1.24",
+]
+
+[project.scripts]
+drone-flowering = "drone_flowering.__main__:main"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

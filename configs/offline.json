@@ -1,0 +1,26 @@
+{
+  "input": {
+    "video_path": "data/raw/sample.mp4"
+  },
+  "output": {
+    "root_dir": "data/outputs/runs"
+  },
+  "sampling": {
+    "every_n_frames": 10
+  },
+  "dummy_inference": {
+    "label": "flowering_candidate",
+    "confidence": 0.72
+  },
+  "mock_telemetry": {
+    "lat": -5.123456,
+    "lng": 105.123456,
+    "altitude_m": 35.0,
+    "heading_deg": 92.5,
+    "gimbal_pitch_deg": -60.0,
+    "speed_mps": 4.2,
+    "lat_step_per_s": 0.0,
+    "lng_step_per_s": 0.0,
+    "heading_step_deg_per_s": 0.0
+  }
+}

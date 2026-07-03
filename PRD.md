@@ -1,0 +1,105 @@
+# Product Requirements Document
+
+## Latar Belakang
+
+Drone AI Project di GGP/GGF membutuhkan fondasi Computer Vision yang dapat membaca video atau frame drone, menjalankan inference, menggabungkan hasil deteksi dengan telemetry, dan menghasilkan output yang dapat diaudit. Sebelum masuk ke DJI Manifold 3 atau custom PSDK, diperlukan offline prototype yang dapat dikembangkan dan diuji di laptop.
+
+## Problem Statement
+
+Belum tersedia pipeline lokal yang konsisten untuk menguji alur deteksi flowering candidate atau kondisi tanaman dari video drone. Tanpa pipeline offline, risiko debugging akan terlalu besar ketika langsung masuk ke PSDK Liveview, telemetry subscription, Manifold Application, atau DPK.
+
+## Tujuan Project
+
+- Membangun fondasi pipeline offline untuk Computer Vision drone.
+- Membuat kontrak data output deteksi dan telemetry.
+- Menyediakan struktur yang mudah dimigrasikan ke PSDK Liveview target migration dan Manifold Application target migration.
+- Memudahkan audit hasil melalui file `JSONL`, `CSV`, dan overlay opsional.
+
+## Target User dan Audiens
+
+- Peserta KP/magang atau developer yang mengembangkan prototype.
+- Tim Digital Innovation yang mengevaluasi kelayakan pipeline.
+- Pembimbing teknis yang menilai desain sebelum integrasi DJI.
+- Tim lapangan atau agronomi sebagai pengguna hasil eksperimen visual.
+
+## Use Case Utama
+
+Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil frame sesuai interval, menjalankan dummy inference engine, menggabungkan hasil dengan mock telemetry provider, lalu menghasilkan `JSONL`, `CSV`, dan overlay opsional untuk validasi flowering candidate.
+
+## MVP Scope
+
+- Input berupa file video lokal.
+- Config lokal untuk path input, interval sampling, dan output.
+- Video file frame source.
+- Dummy inference engine.
+- Mock telemetry provider.
+- Result writer untuk `JSONL` dan `CSV`.
+- Output folder per run.
+- Overlay renderer opsional.
+- CLI sederhana.
+- Smoke test pipeline end-to-end.
+
+## Non-Goals / Out of Scope
+
+- Integrasi DJI PSDK asli.
+- PSDK Liveview runtime.
+- Data Subscription asli.
+- Manifold 3 deployment.
+- DPK packaging.
+- DJI Pilot rendering.
+- Kontrol drone.
+- Kontrol gimbal.
+- Training model serius.
+- Cloud, S3, database production, credential, token, atau secrets.
+- Sistem production.
+
+## Input
+
+- File video drone lokal.
+- File config lokal.
+- Parameter sampling frame.
+- Mock telemetry atau telemetry log lokal pada fase berikutnya.
+
+## Output
+
+- `detections.jsonl` berisi satu record per detection.
+- `detections.csv` untuk inspeksi spreadsheet.
+- `run_metadata.json` untuk metadata run.
+- Folder overlay opsional berisi image atau video hasil anotasi.
+
+## Acceptance Criteria
+
+- Pipeline dapat dijalankan offline dari file video lokal.
+- Setiap detection memiliki field wajib sesuai `DATA_SCHEMA.md`.
+- Output `JSONL` dan `CSV` dapat dibaca ulang tanpa konteks tambahan.
+- Setiap output run tersimpan di folder terpisah.
+- Tidak ada path absolut yang di-hardcode.
+- Tidak ada credential, token, atau koneksi cloud.
+- Modul utama dapat diganti secara bertahap menuju target migration tanpa mengubah kontrak output.
+
+## Risiko Teknis
+
+- Kualitas video tidak cukup untuk melihat flowering candidate.
+- Timestamp frame tidak sinkron dengan telemetry.
+- GPS drone tidak otomatis merepresentasikan posisi objek di tanah.
+- Dummy inference dapat memberi kesan akurasi yang tidak valid jika tidak diberi label jelas.
+- Format output yang berubah-ubah akan menyulitkan migrasi ke PSDK.
+- Dependensi berat dapat menyulitkan deployment ke Manifold Application.
+
+## Asumsi Awal
+
+- Video tersedia sebagai file lokal.
+- Prototype dijalankan di laptop developer.
+- Telemetry awal dapat dimock dengan nilai stabil atau interpolasi sederhana.
+- Fokus awal adalah pipeline dan auditability, bukan performa real-time.
+- Integrasi DJI baru dilakukan setelah desain offline stabil.
+
+## Rencana Pengembangan Menuju Custom PSDK / Manifold 3
+
+1. Stabilkan offline prototype dengan video file frame source.
+2. Tambahkan dukungan telemetry log lokal bila tersedia.
+3. Pisahkan interface frame source agar dapat diganti dengan PSDK Liveview.
+4. Pisahkan telemetry provider agar dapat diganti dengan PSDK Data Subscription.
+5. Uji dependency agar sesuai dengan batasan Manifold Application.
+6. Siapkan desain DPK setelah runtime di Manifold terbukti berjalan.
+7. Evaluasi DJI Pilot rendering setelah format event dan kebutuhan visual jelas.
