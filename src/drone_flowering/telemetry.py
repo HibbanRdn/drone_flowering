@@ -3,9 +3,11 @@ from __future__ import annotations
 
 class MockTelemetryProvider:
     def __init__(self, config: dict[str, float]) -> None:
+        # MENYIMPAN KONFIGURASI TELEMETRY (LAT, LNG, ALTITUDE, DLL.) DARI CONFIG
         self.config = config
 
     def get(self, timestamp_ms: float) -> dict[str, float | str]:
+        # MENGHASILKAN DATA TELEMETRY MOCK BERDASARKAN TIMESTAMP FRAME (SIMULASI, BUKAN DRONE ASLI)
         seconds = timestamp_ms / 1000.0
         return {
             "lat": self.config["lat"] + self.config["lat_step_per_s"] * seconds,

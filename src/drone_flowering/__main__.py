@@ -8,6 +8,7 @@ from .config import ConfigError
 
 
 def main(argv: list[str] | None = None) -> int:
+    # MEMPARSE ARGUMEN CLI, MEMANGGIL RUN_PIPELINE(), LALU MENAMPILKAN HASIL RUN KE TERMINAL
     parser = argparse.ArgumentParser(description="Jalankan offline prototype drone flowering.")
     parser.add_argument("--config", default="configs/offline.json", help="Path config JSON.")
     args = parser.parse_args(argv)

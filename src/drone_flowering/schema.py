@@ -28,6 +28,7 @@ CSV_COLUMNS = [
 
 
 def flatten_detection(record: dict[str, object]) -> dict[str, object]:
+    # MERATAKAN RECORD DETECTION NESTED (BBOX + TELEMETRY) MENJADI SATU LEVEL UNTUK OUTPUT CSV
     bbox = record["bbox_xyxy"]
     telemetry = record["telemetry"]
     return {

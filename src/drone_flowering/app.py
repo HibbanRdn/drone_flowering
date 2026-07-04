@@ -23,6 +23,7 @@ class PipelineResult:
 
 
 def run_pipeline(config_path: str | Path) -> PipelineResult:
+    # MEMBACA CONFIG, INISIALISASI SEMUA MODUL, MENJALANKAN LOOP FRAME, DAN MENULIS SEMUA OUTPUT
     config = ConfigLoader.load(config_path)
     run_started_at = datetime.now().astimezone()
     run_id = run_started_at.strftime("%Y%m%d-%H%M%S-%f")

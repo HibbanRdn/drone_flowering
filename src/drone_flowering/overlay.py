@@ -17,6 +17,7 @@ class OpenCvOverlayRenderer:
         width_px: int,
         height_px: int,
     ) -> None:
+        # INISIALISASI OVERLAY: MEMBUAT FOLDER FRAMES DAN/ATAU VIDEO WRITER JIKA ENABLED
         self.config = config
         self.count = 0
         self.warnings: list[str] = []
@@ -53,6 +54,7 @@ class OpenCvOverlayRenderer:
         timestamp_iso: str,
         telemetry: dict[str, object],
     ) -> None:
+        # MENGGAMBAR BOUNDING BOX, LABEL, DAN TIMESTAMP PADA FRAME, LALU MENULIS KE VIDEO ATAU FILE GAMBAR
         if not self.config.enabled:
             return
         if self.config.max_frames is not None and self.count >= self.config.max_frames:
@@ -101,21 +103,25 @@ class OpenCvOverlayRenderer:
             cv2.imwrite(str(self.frames_dir / f"frame_{self.count:06d}.jpg"), image)
 
     def close(self) -> None:
+        # MELEPAS VIDEO WRITER (HARUS DIPANGGIL AGAR FILE VIDEO TERTULIS SEMPURNA)
         if self.video is not None:
             self.video.release()
 
     @property
     def frames_written(self) -> int:
+        # MENGEMBALIKAN JUMLAH FRAME YANG SUDAH DI-RENDER OLEH OVERLAY
         return self.count
 
     @property
     def overlay_video_output(self) -> str | None:
+        # MENGEMBALIKAN PATH FILE overlay.mp4 ATAU NONE JIKA TIDAK DIBUAT
         if self.config.enabled and self.video_path.exists():
             return str(self.video_path)
         return None
 
     @property
     def overlay_frames_output(self) -> str | None:
+        # MENGEMBALIKAN PATH FOLDER FRAMES ATAU NONE JIKA TIDAK DIBUAT
         if self.config.enabled and self.frames_dir_created:
             return str(self.frames_dir)
         return None

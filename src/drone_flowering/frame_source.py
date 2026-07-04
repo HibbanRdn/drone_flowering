@@ -19,10 +19,12 @@ class FrameRecord:
 
 class VideoFileFrameSource:
     def __init__(self, video_path: Path, every_n_frames: int) -> None:
+        # MENYIMPAN PATH VIDEO DAN INTERVAL SAMPLING UNTUK DIPAKAI METHOD LAIN
         self.video_path = video_path
         self.every_n_frames = every_n_frames
 
     def video_metadata(self) -> dict[str, object]:
+        # MEMBUKA VIDEO, MEMBACA FPS/RESOLUSI/FRAME_COUNT/DURASI, LALU MENGEMBALIKAN SEBAGAI DICT
         cap = self._open()
         try:
             fps = float(cap.get(cv2.CAP_PROP_FPS) or 0.0)
@@ -39,6 +41,7 @@ class VideoFileFrameSource:
             cap.release()
 
     def frames(self) -> Iterator[FrameRecord]:
+        # GENERATOR: MEMBACA FRAME VIDEO SATU PER SATU, MENGHASILKAN FRAMERECORD SETIAP INTERVAL SAMPLING
         cap = self._open()
         fps = float(cap.get(cv2.CAP_PROP_FPS) or 0.0)
         frame_index = 0
@@ -55,6 +58,7 @@ class VideoFileFrameSource:
             cap.release()
 
     def _open(self):
+        # MEMBUKA FILE VIDEO DENGAN OPENCV DAN MENGEMBALIKAN VideoCapture OBJECT
         if cv2 is None:
             raise RuntimeError("OpenCV belum terpasang. Jalankan `pip install -e .`.")
         cap = cv2.VideoCapture(str(self.video_path))

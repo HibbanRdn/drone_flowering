@@ -35,6 +35,7 @@ class PipelineConfig:
 class ConfigLoader:
     @staticmethod
     def load(path: str | Path) -> PipelineConfig:
+        # MEMBACA FILE CONFIG JSON, MEMVALIDASI SEMUA FIELD, MENGEMBALIKAN PIPELINECONFIG UNTUK APP.PY
         config_path = Path(path)
         if not config_path.exists():
             raise ConfigError(f"Config tidak ditemukan: {config_path}")
@@ -88,6 +89,7 @@ class ConfigLoader:
 
 
 def _value(raw: dict[str, Any], dotted_key: str) -> Any:
+    # MENGAMBIL NILAI DARI NESTED DICT MENGGUNAKAN DOTTED KEY, MISAL "INPUT.VIDEO_PATH"
     current: Any = raw
     for part in dotted_key.split("."):
         if not isinstance(current, dict) or part not in current:
@@ -97,6 +99,7 @@ def _value(raw: dict[str, Any], dotted_key: str) -> Any:
 
 
 def _relative_path(raw: dict[str, Any], dotted_key: str) -> Path:
+    # MENGAMBIL PATH DARI CONFIG DAN MEMASTIKAN BERSIFAT RELATIF, BUKAN ABSOLUT
     path = Path(str(_value(raw, dotted_key)))
     if path.is_absolute():
         raise ConfigError(f"{dotted_key} harus path relatif, bukan path absolut")
@@ -104,6 +107,7 @@ def _relative_path(raw: dict[str, Any], dotted_key: str) -> Path:
 
 
 def _overlay_config(raw: dict[str, Any]) -> OverlayConfig:
+    # MEMVALIDASI BLOK OVERLAY DARI CONFIG DAN MENGEMBALIKAN OverlayConfig
     overlay = raw.get("overlay", {})
     if not isinstance(overlay, dict):
         raise ConfigError("overlay harus object JSON")
@@ -123,6 +127,7 @@ def _overlay_config(raw: dict[str, Any]) -> OverlayConfig:
 
 
 def _experiment_config(raw: dict[str, Any]) -> dict[str, Any]:
+    # MENGAMBIL BLOK EXPERIMENT DARI CONFIG ATAU MENGEMBALIKAN DICT KOSONG
     experiment = raw.get("experiment", {})
     if not isinstance(experiment, dict):
         raise ConfigError("experiment harus object JSON")
@@ -132,6 +137,7 @@ def _experiment_config(raw: dict[str, Any]) -> dict[str, Any]:
 def _mock_or_experiment_float(
     raw: dict[str, Any], experiment: dict[str, Any], key: str
 ) -> float:
+    # MENGAMBIL NILAI FLOAT DARI MOCK_TELEMETRY DULU, FALLBACK KE EXPERIMENT, TERAKHIR ERROR
     mock = raw.get("mock_telemetry", {})
     if isinstance(mock, dict) and key in mock:
         return float(mock[key])
@@ -141,6 +147,7 @@ def _mock_or_experiment_float(
 
 
 def _bool(raw: dict[str, Any], key: str, default: bool) -> bool:
+    # MEMVALIDASI BAHWA NILAI ADALAH BOOLEAN, MENGEMBALIKAN DEFAULT JIKA TIDAK ADA
     value = raw.get(key, default)
     if not isinstance(value, bool):
         raise ConfigError(f"overlay.{key} harus boolean")

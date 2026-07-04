@@ -13,6 +13,7 @@ from drone_flowering.schema import SCHEMA_VERSION
 
 
 def main() -> None:
+    # SMOKE TEST: MEMBUAT VIDEO SINTETIS, MENJALANKAN PIPELINE, MEMVERIFIKASI SEMUA OUTPUT DAN FIELD WAJIB
     import cv2
     import numpy as np
 
