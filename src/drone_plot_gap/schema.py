@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-SCHEMA_VERSION = "drone-flowering-detection.v1"
+SCHEMA_VERSION = "drone-plot-gap-detection.v1"
 
 CSV_COLUMNS = [
     "schema_version",

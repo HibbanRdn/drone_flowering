@@ -2,13 +2,27 @@
 
 ## 1. Ringkasan Status Project Saat Ini
 
-Project `drone_flowering` saat ini berada pada tahap offline prototype untuk pipeline Computer Vision drone dalam konteks Drone AI Project GGP/GGF. Prototype ini sudah membuktikan alur data dasar:
+Project `drone_plot_gap` saat ini berada pada tahap offline prototype untuk pipeline Computer Vision drone dalam konteks Drone AI Project GGP/GGF. Fokus case terbaru adalah deteksi plot bolong / missing plant pada kebun nanas, dengan target data top-view/nadir dari video, foto drone, atau orthomosaic. Prototype ini sudah membuktikan alur data dasar:
 
 ```text
 video file -> frame sampling -> dummy inference -> mock telemetry -> JSONL/CSV -> run summary/manifest -> overlay visual
 ```
 
-Tahap ini belum bertujuan menghasilkan deteksi flowering yang akurat. Fokus utamanya adalah memastikan boundary pipeline, kontrak data, output audit, dan cara demo offline sudah dapat berjalan di laptop sebelum ada sample dataset asli dari pembimbing atau tim.
+Tahap ini belum bertujuan menghasilkan deteksi missing plant yang akurat. Fokus utamanya adalah memastikan boundary pipeline, kontrak data, output audit, dan cara demo offline sudah dapat berjalan di laptop sebelum ada sample dataset asli dari pembimbing atau tim.
+
+Folder project lokal saat ini adalah:
+
+```text
+/Users/muhamadhibbanramadhan/Documents/drone_plot_gap
+```
+
+Command utama saat ini:
+
+```bash
+.venv/bin/python -m drone_plot_gap --config configs/offline.json
+```
+
+DJI Payload-SDK resmi sudah tersedia di `/Users/muhamadhibbanramadhan/Documents/Payload-SDK-master` dan sudah diinspeksi secara read-only. PSDK masih menjadi target migrasi desain; belum ada integrasi DJI asli di project ini.
 
 ## 2. Fitur Yang Sudah Selesai
 
@@ -42,6 +56,13 @@ Fitur berikut belum dibuat karena memang di luar scope tahap awal:
 - Gimbal control.
 - Cloud, S3, database, atau integrasi production.
 
+Catatan PSDK:
+
+- DJI Developer App untuk Payload SDK - Manifold 3 sudah dibuat.
+- App ID, App Key, App License, App Advanced License, dan developer account tidak boleh ditulis di repository atau dokumentasi.
+- Sample PSDK resmi harus berhasil berjalan terlebih dahulu sebelum custom app plot bolong dibuat.
+- Detail mapping dan urutan kerja tersedia di `PSDK_INTEGRATION_NOTES.md`.
+
 Pembatasan ini menjaga prototype tetap kecil, offline, dan mudah divalidasi sampai format data lapangan asli sudah jelas.
 
 ## 4. Cara Manual Check Di Laptop
@@ -69,7 +90,7 @@ Jalankan smoke test:
 Jalankan pipeline dengan config default:
 
 ```bash
-.venv/bin/python -m drone_flowering --config configs/offline.json
+.venv/bin/python -m drone_plot_gap --config configs/offline.json
 ```
 
 Catatan: command pipeline dengan config default kemungkinan akan error bila `data/raw/sample.mp4` belum ada. Error seperti itu normal selama sample video asli belum tersedia atau path video belum diubah.
@@ -84,7 +105,7 @@ Ada dua pilihan untuk menyiapkan input demo:
 Setelah input siap, jalankan:
 
 ```bash
-.venv/bin/python -m drone_flowering --config configs/offline.json
+.venv/bin/python -m drone_plot_gap --config configs/offline.json
 ```
 
 Output yang diharapkan berada pada folder run terbaru:
@@ -129,7 +150,7 @@ Jika overlay belum aktif, file `overlay.mp4` atau folder `frames/` bisa tidak ad
 
 ## 7. Narasi Singkat Untuk Demo Ke Pembimbing
 
-Prototype ini belum ditujukan untuk mendeteksi flowering secara akurat. Tujuan tahap ini adalah membangun pipeline data Computer Vision yang rapi dan dapat diaudit dari video drone lokal sampai menjadi output terstruktur. Pada tahap berikutnya, input video file dapat diganti arahnya menjadi PSDK Liveview, dummy inference dapat diganti dengan model Computer Vision asli, dan mock telemetry dapat diganti dengan DJI telemetry subscription. Overlay lokal yang tersedia sekarang berfungsi untuk audit visual di laptop, sebelum nanti arah desainnya dapat dikaji untuk rendering lain seperti DJI Pilot sesuai kebutuhan tahap berikutnya.
+Prototype ini belum ditujukan untuk mendeteksi missing plant secara akurat. Tujuan tahap ini adalah membangun pipeline data Computer Vision yang rapi dan dapat diaudit dari video drone lokal sampai menjadi output terstruktur. Case terbaru diarahkan ke top-view/nadir karena plot bolong lebih mudah dianalisis dari pola barisan tanaman. Pada tahap berikutnya, input video file dapat diganti arahnya menjadi PSDK Liveview, dummy inference dapat diganti dengan model Computer Vision asli, dan mock telemetry dapat diganti dengan DJI telemetry subscription. Overlay lokal yang tersedia sekarang berfungsi untuk audit visual di laptop, sebelum nanti arah desainnya dapat dikaji untuk rendering lain seperti DJI Pilot sesuai kebutuhan tahap berikutnya.
 
 ## 8. Checklist Demo Ke Pembimbing
 
@@ -148,8 +169,9 @@ Prototype ini belum ditujukan untuk mendeteksi flowering secara akurat. Tujuan t
 
 - Dataset asli tersedia dalam bentuk apa: video, foto, `.tif`, orthomosaic, atau format lain?
 - Apakah ada metadata GPS, timestamp, gimbal pitch, altitude, heading, atau speed?
-- Sudut kamera yang direncanakan berapa?
-- Target visual flowering yang ingin dideteksi seperti apa?
+- Apakah data diambil dari sudut nadir/top-view dengan gimbal sekitar -90 derajat?
+- Pola terbang yang direncanakan apakah `top_view_grid`, `row_scan`, atau pola lain?
+- Definisi operasional plot bolong/missing plant yang ingin dideteksi seperti apa?
 - Apakah ada label atau anotasi existing?
 - Output yang diharapkan apakah bounding box, CSV, JSON, peta, report, atau kombinasi beberapa format?
 - Apakah hasil perlu real-time di drone atau cukup near real-time setelah penerbangan?
@@ -157,4 +179,4 @@ Prototype ini belum ditujukan untuk mendeteksi flowering secara akurat. Tujuan t
 
 ## 10. Status Teknis Singkat Untuk Pembimbing
 
-Saat ini saya sudah menyiapkan offline prototype pipeline Computer Vision untuk Drone AI Project GGP/GGF. Pipeline sudah bisa membaca video file lokal, melakukan frame sampling, menjalankan dummy inference deterministik, menambahkan mock telemetry, menulis output `JSONL` dan `CSV`, membuat folder output per run, serta menghasilkan `run_manifest.json`, `run_summary.json`, dan overlay lokal untuk audit visual. Tahap ini belum memakai model AI asli, training, DJI PSDK, Manifold 3, cloud, atau kontrol drone/gimbal. Next step utama adalah menunggu sample dataset asli agar format input, kebutuhan metadata, strategi anotasi, dan arah model dapat ditentukan dengan tepat.
+Saat ini saya sudah menyiapkan offline prototype pipeline Computer Vision untuk Drone AI Project GGP/GGF dengan konteks terbaru deteksi plot bolong / missing plant pada kebun nanas. Pipeline sudah bisa membaca video file lokal, melakukan frame sampling, menjalankan dummy inference deterministik dengan label `empty_plot_candidate`, menambahkan mock telemetry, menulis output `JSONL` dan `CSV`, membuat folder output per run, serta menghasilkan `run_manifest.json`, `run_summary.json`, dan overlay lokal untuk audit visual. Tahap ini belum memakai model AI asli, training, DJI PSDK, Manifold 3 deployment, DPK, cloud, atau kontrol drone/gimbal. Next step utama adalah menunggu sample dataset asli top-view/nadir agar format input, kebutuhan metadata, strategi anotasi, dan arah model dapat ditentukan dengan tepat.

@@ -8,7 +8,7 @@ class DummyInferenceEngine:
         self.confidence = confidence
 
     def detect(self, frame: object, frame_index: int) -> list[dict[str, object]]:
-        # MEMBUAT DUMMY DETECTION DENGAN BOUNDING BOX DI TENGAH FRAME ( BUKAN AI ASLI!!!)
+        # MEMBUAT DUMMY CANDIDATE PLOT KOSONG DI TENGAH FRAME (BUKAN AI ASLI)
         height, width = frame.shape[:2]
         x1, y1 = int(width * 0.4), int(height * 0.4)
         x2, y2 = int(width * 0.6), int(height * 0.6)
@@ -18,7 +18,7 @@ class DummyInferenceEngine:
                 "confidence": self.confidence,
                 "bbox_xyxy": [x1, y1, x2, y2],
                 "bbox_format": "xyxy",
-                "model_name": "dummy_inference",
+                "model_name": "dummy_plot_gap_baseline",
                 "model_version": "0.1.0",
             }
         ]

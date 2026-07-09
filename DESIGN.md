@@ -2,7 +2,7 @@
 
 ## Arsitektur Pipeline Offline
 
-Pipeline offline dirancang sebagai rangkaian modul kecil yang dapat diganti tanpa mengubah kontrak data utama. Fokus desain adalah menjaga batas antara sumber frame, inference, telemetry, output, dan overlay.
+Pipeline offline dirancang sebagai rangkaian modul kecil yang dapat diganti tanpa mengubah kontrak data utama. Fokus desain adalah menjaga batas antara sumber frame, inference, telemetry, output, dan overlay untuk case awal deteksi plot bolong / missing plant pada kebun nanas.
 
 ```text
 ConfigLoader
@@ -16,9 +16,9 @@ ConfigLoader
 ## Alur Data End-to-End
 
 1. ConfigLoader membaca konfigurasi lokal.
-2. FrameSource membuka video file dan menghasilkan frame beserta metadata.
+2. FrameSource membuka video file top-view/nadir dan menghasilkan frame beserta metadata.
 3. Frame sampling memilih frame berdasarkan interval.
-4. InferenceEngine menghasilkan detection candidate.
+4. InferenceEngine menghasilkan detection candidate, saat ini label dummy `empty_plot_candidate`.
 5. TelemetryProvider menyediakan telemetry untuk timestamp frame.
 6. ResultWriter menulis detection ke `JSONL` dan `CSV`.
 7. OverlayRenderer membuat output visual bila diaktifkan.
@@ -29,7 +29,7 @@ ConfigLoader
 Struktur implementasi awal:
 
 ```text
-src/drone_flowering/
+src/drone_plot_gap/
   app.py
   config.py
   frame_source.py
@@ -80,15 +80,16 @@ Bertanggung jawab membaca config lokal dan melakukan validasi minimal terhadap f
 
 ## Status Data Input
 
-Input utama saat ini tetap video file lokal. Dataset publik tidak ditambahkan pada tahap ini. Contoh data asli akan diminta dari pembimbing atau tim GGP/GGF terlebih dahulu.
+Input utama saat ini tetap video file lokal. Untuk case plot bolong, video yang paling sesuai adalah top-view/nadir sehingga setiap frame dapat diperlakukan sebagai image dari atas. Dataset publik tidak ditambahkan pada tahap ini. Contoh data asli akan diminta dari pembimbing atau tim GGP/GGF terlebih dahulu.
 
 Setelah contoh data diterima, keputusan teknis berikut baru dievaluasi:
 
-- apakah input utama tetap video, image folder, `.tif`/orthomosaic, atau format lain;
+- apakah input utama tetap video, image folder/foto drone, `.tif`/orthomosaic, atau format lain;
+- bila input berupa `.tif`/orthomosaic, apakah perlu tiling sebelum inference;
 - kebutuhan preprocessing;
 - strategi anotasi;
 - kebutuhan image folder atau GeoTIFF support;
-- apakah model berikutnya object detection, segmentation, atau pendekatan lain.
+- apakah model berikutnya deteksi tanaman, deteksi plot kosong, segmentation, atau pendekatan lain berbasis pola barisan.
 
 Sebelum keputusan tersebut dibuat, jangan menambahkan parser dataset publik, auto-download dataset, workflow training, atau integrasi cloud.
 
@@ -96,7 +97,7 @@ Sebelum keputusan tersebut dibuat, jangan menambahkan parser dataset publik, aut
 
 ### Dari VideoFileFrameSource ke PSDKLiveviewFrameSource
 
-FrameSource dibuat sebagai boundary agar sumber frame dapat diganti dari video file ke PSDK Liveview. Metadata frame tetap mempertahankan `frame_index`, `timestamp_ms`, dan `timestamp_iso`.
+FrameSource dibuat sebagai boundary agar sumber frame dapat diganti dari video file ke PSDK Liveview. Metadata frame tetap mempertahankan `frame_index`, `timestamp_ms`, dan `timestamp_iso`. Untuk data orthomosaic, adapter berbeda dapat dibuat di fase berikutnya agar tile `.tif` dapat diproses sebagai frame/image tanpa mengganggu pipeline video MVP.
 
 ### Dari MockTelemetryProvider ke PSDKTelemetryProvider
 
@@ -108,7 +109,7 @@ Overlay lokal hanya untuk validasi offline. Jika diperlukan, hasil detection dap
 
 ### Dari Offline App ke Manifold Application / DPK
 
-Offline app menjaga dependency minimal agar lebih mudah dipindahkan ke Manifold Application. DPK packaging baru dirancang setelah pipeline berjalan stabil di runtime target.
+Offline app menjaga dependency minimal agar lebih mudah dipindahkan ke Manifold Application pada target DJI Manifold 3. DPK packaging baru dirancang setelah pipeline berjalan stabil di runtime target.
 
 ## Strategi Error Handling
 
@@ -144,6 +145,8 @@ data/outputs/runs/<run_id>/
 
 Metadata `experiment` berasal dari config lokal dan masih manual/offline. Metadata ini bukan telemetry DJI asli, tetapi dipakai untuk membandingkan variasi sudut kamera, altitude, speed, heading strategy, lighting, dan flight pattern.
 
+Untuk case `missing_plant`, metadata eksperimen default diarahkan ke `camera_view` `nadir`, `gimbal_pitch_deg` `-90.0`, dan `flight_pattern` seperti `top_view_grid` atau `row_scan`.
+
 ## Batasan Teknis Yang Harus Dijaga
 
 - Tidak hardcode path absolut.
@@ -152,4 +155,5 @@ Metadata `experiment` berasal dari config lokal dan masih manual/offline. Metada
 - Tidak membuat kontrol drone atau kontrol gimbal.
 - Tidak menganggap GPS drone sebagai koordinat objek di tanah.
 - Tidak mengunci desain pada dummy inference engine.
+- Tidak mengimplementasikan tiling GeoTIFF, training model, atau inference model asli sebelum format dataset lapangan jelas.
 - Tidak membuat fitur production sebelum pipeline offline terbukti.

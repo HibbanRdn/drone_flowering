@@ -2,11 +2,11 @@
 
 ## Latar Belakang
 
-Drone AI Project di GGP/GGF membutuhkan fondasi Computer Vision yang dapat membaca video atau frame drone, menjalankan inference, menggabungkan hasil deteksi dengan telemetry, dan menghasilkan output yang dapat diaudit. Sebelum masuk ke DJI Manifold 3 atau custom PSDK, diperlukan offline prototype yang dapat dikembangkan dan diuji di laptop.
+Drone AI Project di GGP/GGF membutuhkan fondasi Computer Vision yang dapat membaca video, frame, foto drone, atau data orthomosaic, menjalankan inference, menggabungkan hasil deteksi dengan telemetry, dan menghasilkan output yang dapat diaudit. Drone yang kemungkinan digunakan adalah DJI Matrice 400 dengan DJI Manifold 3. Sebelum masuk ke DJI Manifold 3 atau custom PSDK, diperlukan offline prototype yang dapat dikembangkan dan diuji di laptop.
 
 ## Problem Statement
 
-Belum tersedia pipeline lokal yang konsisten untuk menguji alur deteksi flowering candidate atau kondisi tanaman dari video drone. Tanpa pipeline offline, risiko debugging akan terlalu besar ketika langsung masuk ke PSDK Liveview, telemetry subscription, Manifold Application, atau DPK.
+Kebun nanas memiliki pola atau barisan tanam yang dapat diamati dari atas. Pada beberapa area, ada plot yang seharusnya berisi tanaman nanas tetapi kosong atau tanaman tidak tumbuh. Belum tersedia pipeline lokal yang konsisten untuk menguji alur deteksi plot bolong / missing plant dari top-view/nadir video frame, foto drone, atau orthomosaic. Tanpa pipeline offline, risiko debugging akan terlalu besar ketika langsung masuk ke PSDK Liveview, telemetry subscription, Manifold Application, atau DPK.
 
 ## Tujuan Project
 
@@ -24,7 +24,7 @@ Belum tersedia pipeline lokal yang konsisten untuk menguji alur deteksi flowerin
 
 ## Use Case Utama
 
-Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil frame sesuai interval, menjalankan dummy inference engine, menggabungkan hasil dengan mock telemetry provider, lalu menghasilkan `JSONL`, `CSV`, dan overlay opsional untuk validasi flowering candidate.
+Developer menjalankan pipeline pada video drone kebun nanas dengan sudut nadir/top-view. Pipeline mengambil frame sesuai interval, menjalankan dummy inference engine, menggabungkan hasil dengan mock telemetry provider, lalu menghasilkan `JSONL`, `CSV`, dan overlay opsional untuk validasi candidate plot kosong dengan label `empty_plot_candidate`.
 
 ## MVP Scope
 
@@ -56,7 +56,9 @@ Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil 
 
 ## Input
 
-- File video drone lokal.
+- File video drone lokal, terutama top-view/nadir.
+- Frame atau foto drone top-view pada fase berikutnya bila dibutuhkan.
+- `.tif`/orthomosaic pada fase berikutnya bila format data asli membutuhkan tiling.
 - File config lokal.
 - Parameter sampling frame.
 - Mock telemetry atau telemetry log lokal pada fase berikutnya.
@@ -81,7 +83,8 @@ Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil 
 
 ## Risiko Teknis
 
-- Kualitas video tidak cukup untuk melihat flowering candidate.
+- Kualitas video/foto tidak cukup untuk membedakan tanaman nanas, tanah kosong, mulsa, bayangan, atau objek lain.
+- Orthomosaic `.tif` berukuran besar dan membutuhkan tiling sebelum inference.
 - Timestamp frame tidak sinkron dengan telemetry.
 - GPS drone tidak otomatis merepresentasikan posisi objek di tanah.
 - Dummy inference dapat memberi kesan akurasi yang tidak valid jika tidak diberi label jelas.
@@ -90,7 +93,8 @@ Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil 
 
 ## Asumsi Awal
 
-- Video tersedia sebagai file lokal.
+- Video top-view/nadir tersedia sebagai file lokal untuk MVP saat ini.
+- Foto/frame drone atau orthomosaic `.tif` mungkin tersedia setelah dataset asli diterima.
 - Prototype dijalankan di laptop developer.
 - Telemetry awal dapat dimock dengan nilai stabil atau interpolasi sederhana.
 - Fokus awal adalah pipeline dan auditability, bukan performa real-time.
@@ -99,10 +103,13 @@ Developer menjalankan pipeline pada video drone kebun nanas. Pipeline mengambil 
 
 ## Rencana Pengembangan Menuju Custom PSDK / Manifold 3
 
-1. Stabilkan offline prototype dengan video file frame source.
-2. Tambahkan dukungan telemetry log lokal bila tersedia.
-3. Pisahkan interface frame source agar dapat diganti dengan PSDK Liveview.
-4. Pisahkan telemetry provider agar dapat diganti dengan PSDK Data Subscription.
-5. Uji dependency agar sesuai dengan batasan Manifold Application.
-6. Siapkan desain DPK setelah runtime di Manifold terbukti berjalan.
-7. Evaluasi DJI Pilot rendering setelah format event dan kebutuhan visual jelas.
+1. Stabilkan offline prototype dengan video file frame source untuk top-view/nadir frame.
+2. Setelah dataset asli datang, validasi format data top-view: video, image folder, foto drone, atau `.tif`/orthomosaic.
+3. Tambahkan dukungan image folder atau GeoTIFF tiling hanya bila dibutuhkan oleh data asli.
+4. Evaluasi pendekatan model: deteksi tanaman, deteksi plot kosong, segmentation, atau kombinasi post-processing pola barisan.
+5. Tambahkan dukungan telemetry log lokal bila tersedia.
+6. Pisahkan interface frame source agar dapat diganti dengan PSDK Liveview.
+7. Pisahkan telemetry provider agar dapat diganti dengan PSDK Data Subscription.
+8. Uji dependency agar sesuai dengan batasan Manifold Application.
+9. Siapkan desain DPK setelah runtime di Manifold terbukti berjalan.
+10. Evaluasi DJI Pilot rendering setelah format event dan kebutuhan visual jelas.

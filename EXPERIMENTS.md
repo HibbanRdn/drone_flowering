@@ -1,10 +1,10 @@
-# Flowering Data Experiments
+# Missing Plant Data Experiments
 
-## Tujuan Eksperimen Sudut Kamera
+## Tujuan Eksperimen Data Top-View
 
-Eksperimen data bertujuan menentukan sudut kamera, altitude, speed, dan kondisi pencahayaan yang paling memungkinkan flowering candidate terlihat jelas pada kebun nanas. Hasil eksperimen dipakai untuk memperbaiki strategi pengambilan data, bukan untuk mengklaim akurasi model final.
+Eksperimen data bertujuan menentukan format input, altitude, speed, pola terbang, dan kondisi pencahayaan yang paling memungkinkan plot bolong / missing plant terlihat jelas pada kebun nanas. Hasil eksperimen dipakai untuk memperbaiki strategi pengambilan data, bukan untuk mengklaim akurasi model final.
 
-Tahap saat ini belum memakai dataset publik. Dataset asli akan diminta dari pembimbing atau tim GGP/GGF terlebih dahulu agar data lebih sesuai dengan kondisi lapangan, komoditas nanas, sudut kamera, dan target operasional.
+Case ini berbasis pola tanaman dari atas, sehingga dataset awal paling relevan berupa top-view/nadir video frame, foto drone, atau orthomosaic `.tif`. Tahap saat ini belum memakai dataset publik. Dataset asli akan diminta dari pembimbing atau tim GGP/GGF terlebih dahulu agar data lebih sesuai dengan kondisi lapangan, komoditas nanas, sudut kamera, dan target operasional.
 
 ## Status Dataset
 
@@ -12,15 +12,16 @@ Tahap saat ini belum memakai dataset publik. Dataset asli akan diminta dari pemb
 - Tidak ada rencana menambahkan dataset publik pada tahap ini.
 - Tidak ada auto-download dataset, Roboflow, Kaggle, Mendeley, API key, token, cloud, atau S3.
 - Pipeline tetap offline dan lokal sampai pembimbing/tim memberikan contoh data.
-- Dukungan image folder, `.tif`/GeoTIFF, preprocessing, anotasi, dan model asli baru diputuskan setelah contoh data diterima.
+- Dukungan image folder, `.tif`/GeoTIFF tiling, preprocessing, anotasi, dan model asli baru diputuskan setelah contoh data diterima.
 
 ## Checklist Request Data Ke Pembimbing/Tim
 
 - Jenis data yang tersedia: video, foto/frame, `.tif`, orthomosaic, atau live stream sample.
 - Contoh data minimal 1-3 file untuk testing awal.
 - Apakah data memiliki metadata GPS, timestamp, gimbal pitch, altitude, heading, dan speed.
-- Sudut kamera dan pola terbang yang digunakan.
-- Target yang ingin dideteksi: flowering, non-flowering, kondisi tanaman, atau area tertentu.
+- Apakah kamera menghadap nadir/top-view atau masih oblique.
+- Pola terbang yang digunakan, misalnya `top_view_grid` atau `row_scan`.
+- Target yang ingin dideteksi: plot kosong, tanaman hilang, tanaman tidak tumbuh, atau area bermasalah lain.
 - Apakah sudah ada label/anotasi existing.
 - Format output yang diharapkan dari sistem.
 - Batasan privasi atau aturan internal perusahaan.
@@ -32,14 +33,15 @@ Tahap saat ini belum memakai dataset publik. Dataset asli akan diminta dari pemb
 | Parameter | Deskripsi |
 | --- | --- |
 | `altitude` | Ketinggian drone dari permukaan referensi. |
-| `gimbal_pitch` | Sudut pitch gimbal, misalnya -90, -60, -45, atau -30 derajat. |
+| `gimbal_pitch` | Sudut pitch gimbal; untuk nadir/top-view gunakan sekitar -90 derajat. |
+| `camera_view` | Sudut pandang kamera, misalnya `nadir`, `top_view`, atau `oblique`. |
 | `heading` | Arah hadap drone. |
 | `speed` | Kecepatan drone saat merekam. |
 | `time_of_day` | Waktu pengambilan data. |
 | `lighting` | Kondisi cahaya, misalnya cerah, mendung, backlight, atau low light. |
-| `flight_pattern` | Pola terbang, misalnya grid, garis lurus, atau orbit terbatas. |
+| `flight_pattern` | Pola terbang, misalnya `top_view_grid` atau `row_scan`. |
 | `camera_mode` | Mode kamera, resolusi, FPS, dan exposure bila tersedia. |
-| `notes_visibility_flowering` | Catatan apakah flowering terlihat jelas atau tidak. |
+| `notes_plot_visibility` | Catatan apakah barisan tanaman dan plot kosong terlihat jelas atau tidak. |
 
 Parameter utama dicatat di blok `experiment` pada config agar tersalin otomatis ke `run_manifest.json` dan `run_summary.json`. Nilai ini masih metadata offline/manual, bukan telemetry DJI asli.
 
@@ -47,18 +49,18 @@ Parameter utama dicatat di blok `experiment` pada config agar tersalin otomatis 
 
 | Skenario | Gimbal Pitch | Altitude | Speed | Tujuan |
 | --- | --- | --- | --- | --- |
-| Top-down | -90 derajat | Rendah / sedang | Pelan | Melihat pola lahan dan kemungkinan objek dari atas. |
-| Oblique 60 | -60 derajat | Rendah / sedang | Pelan | Menilai visibilitas samping tanaman dan flowering. |
-| Oblique 45 | -45 derajat | Rendah / sedang | Pelan / sedang | Mencari kompromi antara cakupan dan detail visual. |
-| Oblique 30 | -30 derajat | Rendah / sedang | Pelan | Menguji risiko occlusion dan perspektif terlalu miring. |
-| Variasi altitude | Sudut tetap | Berubah | Tetap | Menilai batas detail visual terhadap ketinggian. |
-| Variasi speed | Sudut tetap | Tetap | Berubah | Menilai blur dan stabilitas frame. |
+| Top-view grid | -90 derajat | Rendah / sedang | Pelan | Melihat pola tanam dan kandidat plot kosong dari atas. |
+| Row scan | -90 derajat | Rendah / sedang | Pelan | Mengikuti barisan tanam agar gap antar tanaman mudah diaudit. |
+| Variasi altitude | -90 derajat | Berubah | Tetap | Menilai batas detail tanaman terhadap ketinggian. |
+| Variasi speed | -90 derajat | Tetap | Berubah | Menilai blur dan stabilitas frame. |
+| Orthomosaic review | N/A | N/A | N/A | Menilai apakah `.tif`/orthomosaic perlu tiling sebelum inference. |
 
 ## Kriteria Evaluasi
 
-- Flowering terlihat atau tidak.
+- Pola barisan tanaman terlihat atau tidak.
+- Plot kosong terlihat atau tidak.
 - Tingkat blur.
-- Occlusion oleh daun, baris tanaman, atau sudut pandang.
+- Occlusion oleh daun, bayangan, gulma, atau objek lain.
 - Annotation confidence dari reviewer manusia.
 - Frame stability.
 - Risiko false positive.
@@ -85,5 +87,5 @@ Gunakan `run_summary.json` untuk membandingkan eksperimen sudut kamera. Field ya
 - Catat kondisi lapangan seobjektif mungkin.
 - Jangan mencampur kesimpulan kualitas data dengan akurasi model.
 - Simpan video dan output run dengan identitas eksperimen yang jelas.
-- GPS drone belum otomatis menunjukkan koordinat objek flowering di tanah.
+- GPS drone belum otomatis menunjukkan koordinat objek di tanah.
 - Dataset internal tidak boleh dimasukkan ke repository sebelum status izin penyimpanan jelas.

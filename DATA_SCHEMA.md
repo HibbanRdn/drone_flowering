@@ -5,10 +5,10 @@
 Versi schema awal:
 
 ```text
-drone-flowering-detection.v1
+drone-plot-gap-detection.v1
 ```
 
-Semua output detection wajib membawa `schema_version` agar perubahan format dapat dilacak.
+Semua output detection wajib membawa `schema_version` agar perubahan format dapat dilacak. Versi schema sekarang mengikuti rebranding project ke deteksi plot bolong / missing plant.
 
 ## Run Metadata
 
@@ -32,8 +32,9 @@ Field `experiment` bersifat opsional di config dan disalin ke `run_manifest.json
 | `mission_id` | Tidak | ID eksperimen atau misi. |
 | `block_id` | Tidak | ID blok/lokasi kebun. |
 | `crop_type` | Tidak | Jenis tanaman, misalnya `pineapple`. |
-| `target_case` | Tidak | Target deteksi, misalnya `flowering_candidate`. |
-| `flight_pattern` | Tidak | Pola terbang, misalnya `row_following`. |
+| `target_case` | Tidak | Target deteksi, misalnya `missing_plant`. |
+| `flight_pattern` | Tidak | Pola terbang, misalnya `top_view_grid` atau `row_scan`. |
+| `camera_view` | Tidak | Sudut pandang kamera, misalnya `nadir`. |
 | `camera_mode` | Tidak | Mode kamera, misalnya `video`. |
 | `altitude_m` | Tidak | Altitude rencana/eksperimen dalam meter. |
 | `gimbal_pitch_deg` | Tidak | Pitch gimbal rencana/eksperimen. |
@@ -70,7 +71,7 @@ Catatan: metadata eksperimen ini masih offline/manual dan bukan telemetry DJI as
 | Field | Wajib | Deskripsi |
 | --- | --- | --- |
 | `detection_id` | Ya | ID unik detection dalam satu run. |
-| `label` | Ya | Label detection, misalnya `flowering_candidate`. |
+| `label` | Ya | Label detection, misalnya `empty_plot_candidate`. |
 | `confidence` | Ya | Nilai confidence 0.0 sampai 1.0. |
 | `bbox_xyxy` | Ya | Bounding box `[x_min, y_min, x_max, y_max]`. |
 | `bbox_format` | Ya | Nilai tetap `xyxy`. |
@@ -97,14 +98,14 @@ Setiap detection pada `JSONL` dan `CSV` wajib membawa field berikut dengan tipe 
 
 | Field | Tipe | Aturan Minimal |
 | --- | --- | --- |
-| `schema_version` | string | Harus bernilai `drone-flowering-detection.v1`. |
+| `schema_version` | string | Harus bernilai `drone-plot-gap-detection.v1`. |
 | `run_id` | string | Tidak kosong dan sama untuk satu run. |
 | `source_video` | string | Path input sesuai config, tanpa hardcode path absolut di kode. |
 | `frame_index` | integer | Lebih besar atau sama dengan 0. |
 | `timestamp_ms` | integer atau float | Lebih besar atau sama dengan 0. |
 | `timestamp_iso` | string | Format ISO 8601. |
 | `detection_id` | string | Unik dalam satu run. |
-| `label` | string | Tidak kosong, contoh `flowering_candidate`. |
+| `label` | string | Tidak kosong, contoh `empty_plot_candidate`. |
 | `confidence` | number | Rentang 0.0 sampai 1.0. |
 | `bbox_xyxy` | array number | Empat nilai `[x_min, y_min, x_max, y_max]`. |
 | `bbox_format` | string | Harus bernilai `xyxy`. |
@@ -128,14 +129,14 @@ Setiap baris `detections.jsonl` berisi satu detection:
 
 ```json
 {
-  "schema_version": "drone-flowering-detection.v1",
+  "schema_version": "drone-plot-gap-detection.v1",
   "run_id": "20260703-140000",
   "source_video": "data/raw/sample.mp4",
   "frame_index": 120,
   "timestamp_ms": 4000,
   "timestamp_iso": "2026-07-03T14:00:04+07:00",
   "detection_id": "20260703-140000-000001",
-  "label": "flowering_candidate",
+  "label": "empty_plot_candidate",
   "confidence": 0.72,
   "bbox_xyxy": [320, 180, 410, 260],
   "bbox_format": "xyxy",
@@ -144,7 +145,7 @@ Setiap baris `detections.jsonl` berisi satu detection:
     "lng": 105.123456,
     "altitude_m": 35.0,
     "heading_deg": 92.5,
-    "gimbal_pitch_deg": -60.0,
+    "gimbal_pitch_deg": -90.0,
     "speed_mps": 4.2,
     "source": "mock"
   }
@@ -162,7 +163,7 @@ schema_version,run_id,source_video,frame_index,timestamp_ms,timestamp_iso,detect
 Contoh row:
 
 ```csv
-drone-flowering-detection.v1,20260703-140000,data/raw/sample.mp4,120,4000,2026-07-03T14:00:04+07:00,20260703-140000-000001,flowering_candidate,0.72,320,180,410,260,xyxy,-5.123456,105.123456,35.0,92.5,-60.0,4.2,mock
+drone-plot-gap-detection.v1,20260703-140000,data/raw/sample.mp4,120,4000,2026-07-03T14:00:04+07:00,20260703-140000-000001,empty_plot_candidate,0.72,320,180,410,260,xyxy,-5.123456,105.123456,35.0,92.5,-90.0,4.2,mock
 ```
 
 Aturan CSV:
@@ -181,7 +182,7 @@ Jika satu frame tidak memiliki detection, tidak perlu menulis row detection koso
 
 ```json
 {
-  "schema_version": "drone-flowering-detection.v1",
+  "schema_version": "drone-plot-gap-detection.v1",
   "run_id": "20260703-140000",
   "created_at": "2026-07-03T14:00:00+07:00",
   "source_video": "data/raw/sample.mp4",
@@ -216,14 +217,14 @@ Jika satu frame tidak memiliki detection, tidak perlu menulis row detection koso
 ```json
 {
   "run_id": "20260703-140000",
-  "mission_id": "FLOWERING_TEST_001",
-  "block_id": "PG1_005E_F0",
-  "target_case": "flowering_candidate",
+  "mission_id": "MISSING_PLANT_TEST_001",
+  "block_id": "PINEAPPLE_BLOCK_001",
+  "target_case": "missing_plant",
   "source_video": "data/raw/sample.mp4",
   "frames_processed": 3,
   "detections_written": 3,
   "labels_count": {
-    "flowering_candidate": 3
+    "empty_plot_candidate": 3
   },
   "confidence_min": 0.72,
   "confidence_max": 0.72,
@@ -232,7 +233,7 @@ Jika satu frame tidak memiliki detection, tidak perlu menulis row detection koso
   "timestamp_ms_max": 2000.0,
   "telemetry": {
     "altitude_m": 35.0,
-    "gimbal_pitch_deg": -60.0,
+    "gimbal_pitch_deg": -90.0,
     "speed_mps": 4.2
   },
   "overlay_enabled": true,
@@ -267,6 +268,7 @@ Jika satu frame tidak memiliki detection, tidak perlu menulis row detection koso
 - `model_version`
 - `telemetry.source`
 - `run_metadata.notes`
+- `experiment.camera_view`
 - `input_video_metadata.fps`
 - `input_video_metadata.width_px`
 - `input_video_metadata.height_px`

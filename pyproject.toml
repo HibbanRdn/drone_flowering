@@ -1,7 +1,7 @@
 [project]
-name = "drone-flowering"
+name = "drone-plot-gap"
 version = "0.1.0"
-description = "Offline prototype pipeline Computer Vision drone untuk deteksi flowering candidate."
+description = "Offline prototype pipeline Computer Vision drone untuk deteksi plot bolong pada kebun nanas."
 requires-python = ">=3.11"
 dependencies = [
   "opencv-python-headless>=4.8",
@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-drone-flowering = "drone_flowering.__main__:main"
+drone-plot-gap = "drone_plot_gap.__main__:main"
 
 [build-system]
 requires = ["setuptools>=69"]

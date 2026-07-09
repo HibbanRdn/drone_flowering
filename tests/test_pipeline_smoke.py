@@ -4,12 +4,14 @@ import json
 import shutil
 import sys
 import csv
+import os
+import subprocess
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from drone_flowering.app import run_pipeline
-from drone_flowering.schema import SCHEMA_VERSION
+from drone_plot_gap.app import run_pipeline
+from drone_plot_gap.schema import SCHEMA_VERSION
 
 
 def main() -> None:
@@ -23,6 +25,20 @@ def main() -> None:
     workdir.mkdir()
 
     try:
+        env = os.environ.copy()
+        env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
+        cli_result = subprocess.run(
+            [sys.executable, "-m", "drone_plot_gap", "--help"],
+            cwd=Path("."),
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        assert cli_result.returncode == 0
+        assert "--config" in cli_result.stdout
+
         video_path = workdir / "input.avi"
         writer = cv2.VideoWriter(
             str(video_path),
@@ -41,16 +57,19 @@ def main() -> None:
                     "input": {"video_path": str(video_path)},
                     "output": {"root_dir": str(workdir / "outputs" / "runs")},
                     "experiment": {
-                        "mission_id": "FLOWERING_TEST_001",
-                        "block_id": "PG1_005E_F0",
-                        "target_case": "flowering_candidate",
-                        "altitude_m": 20.0,
-                        "gimbal_pitch_deg": -45.0,
+                        "mission_id": "MISSING_PLANT_TEST_001",
+                        "block_id": "PINEAPPLE_BLOCK_001",
+                        "crop_type": "pineapple",
+                        "target_case": "missing_plant",
+                        "flight_pattern": "top_view_grid",
+                        "camera_view": "nadir",
+                        "altitude_m": 35.0,
+                        "gimbal_pitch_deg": -90.0,
                         "speed_mps": 2.0,
                     },
                     "sampling": {"every_n_frames": 5},
                     "dummy_inference": {
-                        "label": "flowering_candidate",
+                        "label": "empty_plot_candidate",
                         "confidence": 0.72,
                     },
                     "mock_telemetry": {
@@ -58,7 +77,7 @@ def main() -> None:
                         "lng": 105.123456,
                         "altitude_m": 35.0,
                         "heading_deg": 92.5,
-                        "gimbal_pitch_deg": -60.0,
+                        "gimbal_pitch_deg": -90.0,
                         "speed_mps": 4.2,
                     },
                 }
@@ -114,7 +133,10 @@ def main() -> None:
         for record in records:
             assert required <= record.keys()
             assert record["schema_version"] == SCHEMA_VERSION
+            assert record["schema_version"] == "drone-plot-gap-detection.v1"
             assert record["run_id"] == result.run_id
+            assert record["label"] == "empty_plot_candidate"
+            assert record["model_name"] == "dummy_plot_gap_baseline"
             assert record["bbox_format"] == "xyxy"
             for key in telemetry_required:
                 assert key in record["telemetry"]
@@ -123,6 +145,7 @@ def main() -> None:
             rows = list(csv.DictReader(csv_file))
         assert rows
         assert {row["run_id"] for row in rows} == {result.run_id}
+        assert {row["label"] for row in rows} == {"empty_plot_candidate"}
         for column in (
             "telemetry_lat",
             "telemetry_lng",
@@ -135,16 +158,18 @@ def main() -> None:
 
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         summary = json.loads(summary_path.read_text(encoding="utf-8"))
-        assert manifest["experiment"]["mission_id"] == "FLOWERING_TEST_001"
+        assert manifest["experiment"]["mission_id"] == "MISSING_PLANT_TEST_001"
+        assert manifest["experiment"]["target_case"] == "missing_plant"
+        assert manifest["experiment"]["camera_view"] == "nadir"
         assert manifest["summary"]["frames_processed"] == 3
         assert manifest["summary"]["detections_written"] == 3
         assert manifest["summary"]["overlay_enabled"] is False
-        assert summary["mission_id"] == "FLOWERING_TEST_001"
-        assert summary["block_id"] == "PG1_005E_F0"
-        assert summary["target_case"] == "flowering_candidate"
+        assert summary["mission_id"] == "MISSING_PLANT_TEST_001"
+        assert summary["block_id"] == "PINEAPPLE_BLOCK_001"
+        assert summary["target_case"] == "missing_plant"
         assert summary["frames_processed"] == 3
         assert summary["detections_written"] == 3
-        assert summary["labels_count"] == {"flowering_candidate": 3}
+        assert summary["labels_count"] == {"empty_plot_candidate": 3}
         assert summary["confidence_min"] == 0.72
         assert summary["confidence_max"] == 0.72
         assert summary["confidence_avg"] == 0.72

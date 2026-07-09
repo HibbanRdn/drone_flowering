@@ -6,14 +6,15 @@
     "root_dir": "data/outputs/runs"
   },
   "experiment": {
-    "mission_id": "FLOWERING_TEST_001",
-    "block_id": "PG1_005E_F0",
+    "mission_id": "MISSING_PLANT_TEST_001",
+    "block_id": "PINEAPPLE_BLOCK_001",
     "crop_type": "pineapple",
-    "target_case": "flowering_candidate",
-    "flight_pattern": "row_following",
+    "target_case": "missing_plant",
+    "flight_pattern": "top_view_grid",
+    "camera_view": "nadir",
     "camera_mode": "video",
-    "altitude_m": 20.0,
-    "gimbal_pitch_deg": -45.0,
+    "altitude_m": 35.0,
+    "gimbal_pitch_deg": -90.0,
     "heading_strategy": "along_row",
     "speed_mps": 2.0,
     "time_of_day": "morning",
@@ -24,7 +25,7 @@
     "every_n_frames": 10
   },
   "dummy_inference": {
-    "label": "flowering_candidate",
+    "label": "empty_plot_candidate",
     "confidence": 0.72
   },
   "mock_telemetry": {
@@ -32,7 +33,7 @@
     "lng": 105.123456,
     "altitude_m": 35.0,
     "heading_deg": 92.5,
-    "gimbal_pitch_deg": -60.0,
+    "gimbal_pitch_deg": -90.0,
     "speed_mps": 4.2,
     "lat_step_per_s": 0.0,
     "lng_step_per_s": 0.0,
